@@ -5,11 +5,12 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#define PORT 54321
-#define BUFFER_SIZE 1024
+#define PORT 54321          // Define the port number the server will listen on
+#define BUFFER_SIZE 1024    // Define the size of the buffer to store incoming data
 
+// Function to handle communication with a connected client
 void handle_client(int client_socket) {
-    char buffer[BUFFER_SIZE] = {0};
+    char buffer[BUFFER_SIZE] = {0};  // Buffer to store data received from the client
     int bytes_read;
 
     // Send a welcome message to the client
@@ -19,10 +20,11 @@ void handle_client(int client_socket) {
     // Receive data from the client
     bytes_read = read(client_socket, buffer, BUFFER_SIZE);
     if (bytes_read > 0) {
+        // Print the data received from the client to the console
         printf("Received from client: %s\n", buffer);
     }
 
-    // Close the socket
+    // Close the client socket once communication is complete
     close(client_socket);
 }
 
@@ -31,42 +33,45 @@ int main() {
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
 
-    // Create socket
+    // Create a socket for the server
+    // AF_INET indicates IPv4, SOCK_STREAM indicates TCP
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == 0) {
-        perror("Socket creation failed");
+        perror("Socket creation failed");  // Print an error message if socket creation fails
         exit(EXIT_FAILURE);
     }
 
-    // Bind to a port
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(PORT);
+    // Bind the socket to the server's IP address and the defined port number
+    server_addr.sin_family = AF_INET;               // Use IPv4
+    server_addr.sin_addr.s_addr = INADDR_ANY;       // Bind to any available network interface
+    server_addr.sin_port = htons(PORT);             // Convert the port number to network byte order
 
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Bind failed");
+        perror("Bind failed");  // Print an error message if binding fails
         close(server_socket);
         exit(EXIT_FAILURE);
     }
 
-    // Listen for incoming connections
+    // Listen for incoming connections with a backlog of 3 pending connections
     if (listen(server_socket, 3) < 0) {
-        perror("Listen failed");
+        perror("Listen failed");  // Print an error message if listening fails
         close(server_socket);
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on port %d...\n", PORT);
+    printf("Server listening on port %d...\n", PORT);  // Inform the user that the server is ready
 
-    // Accept incoming connections
+    // Main loop to accept and handle incoming client connections
     while (1) {
+        // Accept an incoming connection from a client
         client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_len);
         if (client_socket < 0) {
-            perror("Accept failed");
+            perror("Accept failed");  // Print an error message if accepting a connection fails
             close(server_socket);
             exit(EXIT_FAILURE);
         }
 
+        // Print the client's IP address and port number for reference
         printf("Connection accepted from %s:%d\n",
                inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
@@ -74,7 +79,7 @@ int main() {
         handle_client(client_socket);
     }
 
-    // Close the server socket
+    // Close the server socket before exiting the program (not reached in this loop)
     close(server_socket);
     return 0;
 }
