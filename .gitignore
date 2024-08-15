@@ -6,3 +6,5 @@
 !*/
 !*.c
 !*.xlsx
+!*.h
+!Makefile
